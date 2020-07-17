@@ -1,0 +1,93 @@
+import win32com.client
+from datetime import datetime
+from fuzzywuzzy import fuzz 
+from fuzzywuzzy import process
+
+# import datefinder
+import json 
+  
+
+def collectmail():
+    #
+    i = 0
+    match=0
+    ObjArr={}
+    ObjArr["mail-details"]=[]
+    try:
+        outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
+        inbox = outlook.GetDefaultFolder(6)
+        messages = inbox.Items
+        messages.Sort("[ReceivedTime]", True)
+        print('total messages: ', len(messages))
+        message = messages.GetFirst()
+        # while message:
+        #     if message.Unread == True:
+        #         print (message.body)
+        #     message = messages.GetNext ()    
+        
+        while message:
+            i += 1
+            try:
+                subject = message.Subject
+                #received_time = (message.ReceivedTime)
+                #received_time = datetime.strptime(received_time, '%m/%d/%y %H:%M:%S')
+                # print message.EntryID
+                html_body = message.HTMLBody
+                from DateTime.DateTime import long
+                size = long(message.Size)
+                sender = message.SenderName
+                
+                receiver = message.To
+                
+                cc = message.Cc
+                
+                body = message.Body
+                #print(body)  
+                #message = messages.GetNext()
+  
+                s1 = ["Hold","reset","rescheduled"]
+                s2 = ["confirmed","scheduled","All set",]
+
+                for j in s1:
+                    a=fuzz.token_set_ratio(j,body)
+                    if a>50:
+                        match+=1
+                        # print("Mail number=",i,"Match Token=",match)
+                        # print("Match Percentage-",a,"matched-",j,'/n/n')
+               
+                
+                
+                if match==0:
+                    # print (i, subject)
+                    # #print (received_time)
+                    # print(sender)
+                    # print(receiver)
+                    # print(cc)
+                    # print(body) 
+                    dictionary = {
+                        "Subject" : subject, 
+                        "Sender" : sender,
+                        "Reciever" : receiver, 
+                        "CC" : cc,
+                        "body" : body
+                    }
+                    # Serializing json 
+                    ObjArr["mail-details"].append(dictionary)
+    
+                message = messages.GetNext()
+                match=0
+
+              
+            except:
+                print(i, 'skip')
+                continue
+                message = messages.GetNext()
+    finally:
+        # Writing to sample.json
+        # with open('person.txt', 'w') as json_file:
+        #     json.dump(ObjArr, json_file)
+        with open("example.json", "w") as outfile: 
+            json.dump(ObjArr,outfile)  
+            
+        print('connection closed')
+collectmail()
